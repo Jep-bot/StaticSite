@@ -1,4 +1,5 @@
 from textnode import TextNode, TextType
+import re 
 
 def split_node(old_node, delimiter, text_type):
     if old_node.text.count(delimiter) % 2 != 0:
@@ -36,4 +37,9 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
             else:
                 new_nodes.extend(split_node(node, delimiter, text_type))
     return new_nodes
-                    
+
+def extract_markdown_images(text):
+    return re.findall(r"!\[(.*?)\]\((.*?)\)",text)
+
+def extract_markdown_links(text):
+    return re.findall(r"(?<!!)\[(.*?)\]\((.*?)\)",text)
