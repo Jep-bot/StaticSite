@@ -7,7 +7,7 @@ class TextType(Enum):
     ITALIC = "italic"
     CODE = "code"
     LINK = "link"
-    IMAGES = "images"
+    IMAGE = "images"
 
 class TextNode:
 
@@ -39,7 +39,7 @@ def text_node_to_html_node(text_node):
             if text_node.url == None:
                 raise ValueError("No url provided")
             return LeafNode("a", text_node.text, {"href":text_node.url} )
-        case TextType.IMAGES:
+        case TextType.IMAGE:
             if text_node.url == None:
                 raise ValueError("No url provided")           
             return LeafNode("img", "", {"src":text_node.url,"alt":text_node.text} )
