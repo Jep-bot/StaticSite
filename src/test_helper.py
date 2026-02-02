@@ -24,6 +24,19 @@ class TestTextNodeSpliter(unittest.TestCase):
                         ]
         self.assertEqual(new_nodes, expeted_list)
 
+    def test_bold_multi(self):
+        node = TextNode("This is **text** with a **bolded phrase** in the middle", TextType.TEXT)
+        new_nodes = split_nodes_delimiter([node], "**", TextType.BOLD)
+        expeted_list = [
+                        TextNode("This is ", TextType.TEXT),
+                        TextNode("text", TextType.BOLD),
+                        TextNode(" with a ", TextType.TEXT),
+                        TextNode("bolded phrase", TextType.BOLD),
+                        TextNode(" in the middle", TextType.TEXT)
+                        ]
+        self.assertEqual(new_nodes, expeted_list)
+
+
     def test_italic(self):
         node = TextNode("This is text with a _italic phrase_ in the middle", TextType.TEXT)
         new_nodes = split_nodes_delimiter([node], "_", TextType.ITALIC)
@@ -98,9 +111,13 @@ class TestTextNodeSpliter(unittest.TestCase):
 
     def test_italic_invalid_none(self):
         node = TextNode("This is text with a italic phrase", TextType.TEXT)
-        with self.assertRaises(ValueError):
-            new_nodes = split_nodes_delimiter([node], "", TextType.ITALIC)
-
+        new_nodes = split_nodes_delimiter([node], "_", TextType.ITALIC)
+        expeted_list = [
+                        TextNode("This is text with a italic phrase", TextType.TEXT),
+                        ]
+        self.assertEqual(new_nodes, expeted_list)
+    
+       
 class TestTextNodeSpliterImages(unittest.TestCase):
 
     def test_split_image(self):
@@ -292,6 +309,21 @@ class TestTextNodeExtractor(unittest.TestCase):
 
 class TestTextToTextNode(unittest.TestCase):
 
+    def test_text_to_text_node_only_text(self):
+        input = "This is text with an italic word and a code block and an link"
+        matches = text_to_textnodes(input)
+        self.assertListEqual([
+            TextNode("This is text with an italic word and a code block and an link", TextType.TEXT),
+        ], matches)
+
+    def test_text_to_text_node_only_bold(self):
+        input = "**This is text with an italic word and a code block and an link**"
+        matches = text_to_textnodes(input)
+        self.assertListEqual([
+            TextNode("This is text with an italic word and a code block and an link", TextType.BOLD),
+        ], matches)
+
+
     def test_text_to_text_node_all(self):
         input = "This is **text** with an _italic_ word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
         matches = text_to_textnodes(input)
@@ -306,6 +338,28 @@ class TestTextToTextNode(unittest.TestCase):
             TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
             TextNode(" and a ", TextType.TEXT),
             TextNode("link", TextType.LINK, "https://boot.dev"),
+        ], matches)
+
+    def test_text_to_text_node_all_multi(self):
+        input = "This is **bold text1** with an _italic1_ word, **bold text2** and _italic2_  and a `code block1` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev), some `code2`"
+        matches = text_to_textnodes(input)
+        self.assertListEqual([
+            TextNode("This is ", TextType.TEXT),
+            TextNode("bold text1", TextType.BOLD),
+            TextNode(" with an ", TextType.TEXT),
+            TextNode("italic1", TextType.ITALIC),
+            TextNode(" word, ", TextType.TEXT),
+            TextNode("bold text2", TextType.BOLD),
+            TextNode(" and ", TextType.TEXT),
+            TextNode("italic2", TextType.ITALIC),
+            TextNode("  and a ", TextType.TEXT),
+            TextNode("code block1", TextType.CODE),
+            TextNode(" and an ", TextType.TEXT),
+            TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+            TextNode(" and a ", TextType.TEXT),
+            TextNode("link", TextType.LINK, "https://boot.dev"),
+            TextNode(", some ", TextType.TEXT),
+            TextNode("code2", TextType.CODE),
         ], matches)
 
 
