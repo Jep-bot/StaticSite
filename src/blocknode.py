@@ -13,6 +13,10 @@ class BlockType(Enum):
 
 def markdown_to_blocks(markdown):
     split = markdown.split("\n\n")
+    blocks = []
+    for block in split:
+        if block.startswith(" "):
+            blocks.append(block.replace(" ",""))
     split = list(map(lambda x: x.strip(),split))
     split = list(filter(None,split))
     return split
@@ -36,7 +40,7 @@ def checke_ordered_list(block,block_type):
     return block_type
 
 def block_to_block_type(block): 
-    if re.findall(r"^#{1,6}\s",block):
+    if re.findall(r"\#{1,6}\s\.*?\n?",block):
         return BlockType.HEADING
     elif block.startswith("```\n") and block.endswith("```"):
         return BlockType.CODE
@@ -57,21 +61,14 @@ def text_to_children(text):
     return htmlNodes
 
 def header_to_htmlNode(text):
-    header_num = block.count("#")
+    header_num = text.count("#")
     header = ""
-    for i in range(1,num):
+    for i in range(0,header_num):
         header += "#"
-    children = text_to_children(text.replace(header,''))
+    header += " "
+    split = text.split('# ')
+    children = text_to_children(split[1])
     return ParentNode("h{}".format(header_num), children)
-
-def quote_to_htmlNode(text):
-    htmlNodes = []
-    lines = text.split("\n")
-    for line in lines:
-        line = line.replace(">",'').replace("> ",'')
-        children = text_to_children(line)
-        htmlNodes.append(ParentNode("blockquote", children))
-    return htmlNodes
 
 def list_to_htmlNode(text,tags,index):
     htmlNodes = []
@@ -86,7 +83,7 @@ def block_to_parentNode(block, block_type):
         case BlockType.HEADING:
             return header_to_htmlNode(block)
         case BlockType.QUOTE:
-            return quote_to_htmlNode(block)
+            return ParentNode("blockquote",text_to_children(block.replace("> ",'').replace(">",'')))
         case BlockType.CODE:
             return ParentNode("pre",
                               [text_node_to_html_node(
@@ -109,5 +106,4 @@ def markdown_to_html_node(markdown):
         htmlNode = block_to_parentNode(block, block_type)
         htmlNodes.append(htmlNode)
     parnetNode = ParentNode("div",htmlNodes) 
-    #print(htmlNodes)
     return parnetNode
