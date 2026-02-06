@@ -1,5 +1,5 @@
 import unittest
-from blocknode import BlockType, markdown_to_blocks, block_to_block_type, markdown_to_html_node
+from blocknode import BlockType, markdown_to_blocks, block_to_block_type, markdown_to_html_node, extract_title
 
 class TestMarkdownToBlock(unittest.TestCase):
 
@@ -370,7 +370,12 @@ This is another paragraph with _italic_ text and `code` here
             html, "".join(html_expected),
         )
 
-
+    def test_extract_title(self):
+        md = "# hello"
+        header = extract_title(md)        
+        self.assertEqual(
+            header, "hello",
+        )
 
 
 

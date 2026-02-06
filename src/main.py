@@ -1,6 +1,7 @@
 import textnode
 import os, io
 import shutil
+from blocknode import markdown_to_html_node, extract_title
 
 PATH_INPUT = "static"
 PATH_OUTPUT = "public"
@@ -42,9 +43,49 @@ def copy_static_to_public(logger_fun):
     input_file_list = os.listdir(PATH_INPUT)
     copy_file(PATH_INPUT, PATH_OUTPUT, logger)
 
+def generate_page(from_path, templete_path, dest_path):
+    print("Generating page from {} to {} using {}".format(from_path, templete_path, dest_path))
+    md_content = ""
+    templete_html = ""
+    with open(from_path, 'r') as file:
+        md_content = file.read()
+    with open(templete_path, 'r') as file:
+        templete_html = file.read()
+    html_content = markdown_to_html_node(md_content)
+    title = extract_title(md_content)
+    templete_html = templete_html.replace("{{ Title }}", title).replace("{{ Content }}", html_content.to_html())
+
+    dir, _ = os.path.split(dest_path)
+    if not os.path.exists(dir):
+        os.mkdir(dir)
+    with open(dest_path, 'w') as file:
+         file.write(templete_html)
+
+def generate_pages_recursive(from_path,templete_path, dest_path, logger_fun):
+    if os.path.isfile(from_path):
+        full_path_output = "{}.{}".format(os.path.join(dest_path, os.path.splitext(os.path.basename(from_path))[0]), "html")
+        generate_page(from_path, templete_path, dest_path)
+        return
+    for item in os.listdir(from_path):
+        full_path = os.path.join(from_path,item)
+        if os.path.isfile(full_path):
+            full_path_output = "{}.{}".format(os.path.join(dest_path, os.path.splitext(item)[0]), "html")
+            generate_page(full_path, templete_path, full_path_output)
+            logger_fun("Copied {} to {}".format(full_path,full_path_output))
+            continue
+        full_path_output = os.path.join(dest_path,item)
+        os.mkdir(full_path_output)
+        logger_fun("Copied folder {} to {}".format(full_path,full_path_output))
+        generate_pages_recursive(full_path, templete_path, full_path_output, logger_fun)
+    return
+    
+    
 def main():
     with open(PATH_TO_LOGGER,"w") as file:
         file.write("Copy all files from {} to {} started\n".format(PATH_INPUT, PATH_OUTPUT))
     copy_static_to_public(logger)
+    #generate_page("content/index.md", "template.html", "public/index.html" )
+    generate_pages_recursive("content", "template.html", "public", logger)
+
 main()
 

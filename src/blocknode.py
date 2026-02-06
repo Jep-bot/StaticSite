@@ -62,10 +62,6 @@ def text_to_children(text):
 
 def header_to_htmlNode(text):
     header_num = text.count("#")
-    header = ""
-    for i in range(0,header_num):
-        header += "#"
-    header += " "
     split = text.split('# ')
     children = text_to_children(split[1])
     return ParentNode("h{}".format(header_num), children)
@@ -107,3 +103,17 @@ def markdown_to_html_node(markdown):
         htmlNodes.append(htmlNode)
     parnetNode = ParentNode("div",htmlNodes) 
     return parnetNode
+
+def extract_title(markdown):
+    blocks = markdown_to_blocks(markdown)
+    header = ""
+    for block in blocks:
+        block_type = block_to_block_type(block)
+        if block_type != BlockType.HEADING:
+            continue 
+        header = header_to_htmlNode(block)
+        if header.tag == "h1":
+            split_block = block.split('# ')
+            return split_block[1]
+            break
+    raise ValueError("No title found")
